@@ -7,23 +7,23 @@ export class PollController {
   constructor(private pollService: PollService) {}
 
   @Post()
-  create(@Body() createPollDto: CreatePollDto) {
-    const result = this.pollService.create(createPollDto);
+  async create(@Body() createPollDto: CreatePollDto) {
+    const result = await this.pollService.create(createPollDto);
 
     return result;
   }
 
   @Post('/join')
-  join(@Body() joinPollDto: JoinPollDto) {
-    const result = this.pollService.join(joinPollDto);
+  async join(@Body() joinPollDto: JoinPollDto) {
+    const result = await this.pollService.join(joinPollDto);
 
     return result;
   }
   @Post('/rejoin')
-  rejoin() {
-    const result = this.pollService.rejoin({
+  async rejoin() {
+    const result = await this.pollService.rejoin({
       name: 'From token',
-      pollID: 'Also from token',
+      pollID: 'UFQSDL',
       userID: 'Guess where this comes from?',
     });
 
