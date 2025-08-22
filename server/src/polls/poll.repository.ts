@@ -82,6 +82,7 @@ export class PollRepository {
       return JSON.parse(currentPoll);
     } catch (e) {
       this.logger.error(`Failed to get pollID ${pollID}`);
+
       throw e;
     }
   }

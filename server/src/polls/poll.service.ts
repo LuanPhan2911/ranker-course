@@ -48,6 +48,7 @@ export class PollService {
     );
 
     const joinedPoll = await this.pollRepository.getPoll(fields.pollID);
+
     const signedString = this.jwtService.sign(
       {
         pollID: joinedPoll.id,
