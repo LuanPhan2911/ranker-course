@@ -1,8 +1,16 @@
-import { Logger } from '@nestjs/common';
 import {
+  BadRequestException,
+  Logger,
+  UseFilters,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import {
+  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -10,9 +18,13 @@ import { PollService } from './poll.service';
 import { Namespace } from 'socket.io';
 import { SocketWithAuth } from './poll.type';
 
+import { WsCatchAllFilter } from 'src/exceptions/ws-catch-all-filter';
+
 @WebSocketGateway({
   namespace: 'polls',
 })
+@UsePipes(new ValidationPipe())
+@UseFilters(new WsCatchAllFilter())
 export class PollGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -41,5 +53,10 @@ export class PollGateway
     );
     this.logger.log(`Disconnected socket id: ${client.id}`);
     this.logger.debug(`Number of connected sockets: ${sockets.size}`);
+  }
+
+  @SubscribeMessage('run')
+  test() {
+    throw new BadRequestException('Bad');
   }
 }
