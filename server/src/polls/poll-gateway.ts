@@ -2,11 +2,13 @@ import {
   BadRequestException,
   Logger,
   UseFilters,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
@@ -19,6 +21,7 @@ import { Namespace } from 'socket.io';
 import { SocketWithAuth } from './poll.type';
 
 import { WsCatchAllFilter } from 'src/exceptions/ws-catch-all-filter';
+import { GatewayAdminGuard } from './gateway-admin-guard';
 
 @WebSocketGateway({
   namespace: 'polls',
@@ -36,7 +39,7 @@ export class PollGateway
   afterInit(): void {
     this.logger.log(`Websocket Gateway initialized.`);
   }
-  handleConnection(client: SocketWithAuth, ...args: any[]) {
+  async handleConnection(client: SocketWithAuth, ...args: any[]) {
     const sockets = this.io.sockets;
     this.logger.debug(
       `Socket connected with userID: ${client.userID}, pollID: ${client.pollID}, and name: "${client.name}"`,
@@ -44,19 +47,70 @@ export class PollGateway
     this.logger.log(`WS Client with id: ${client.id} connected!`);
     this.logger.debug(`Number of connected sockets: ${sockets.size}`);
 
-    this.io.emit('hello', `hello socket ${client.id}`);
+    const roomName = client.pollID;
+    await client.join(roomName);
+
+    const connectedClients = this.io.adapter.rooms?.get(roomName)?.size ?? 0;
+
+    this.logger.debug(
+      `userID: ${client.userID} joined room with name: ${roomName}`,
+    );
+    this.logger.debug(
+      `Total clients connected to room '${roomName}': ${connectedClients}`,
+    );
+
+    const updatedPoll = await this.pollService.addParticipant({
+      pollID: client.pollID,
+      userID: client.userID,
+      name: client.name,
+    });
+
+    this.io.to(roomName).emit('poll_updated', updatedPoll);
   }
-  handleDisconnect(client: SocketWithAuth) {
+  async handleDisconnect(client: SocketWithAuth) {
     const sockets = this.io.sockets;
     this.logger.debug(
       `Socket connected with userID: ${client.userID}, pollID: ${client.pollID}, and name: "${client.name}"`,
     );
     this.logger.log(`Disconnected socket id: ${client.id}`);
     this.logger.debug(`Number of connected sockets: ${sockets.size}`);
+
+    const { pollID, userID } = client;
+    const roomName = client.pollID;
+    const clientCount = this.io.adapter.rooms?.get(roomName)?.size ?? 0;
+
+    const updatedPoll = await this.pollService.removeParticipant(
+      pollID,
+      userID,
+    );
+    this.logger.debug(
+      `Total clients connected to room '${roomName}': ${clientCount}`,
+    );
+
+    // updatedPoll could be undefined if the the poll already started
+    // in this case, the socket is disconnect, but no the poll state
+    if (updatedPoll) {
+      this.io.to(pollID).emit('poll_updated', updatedPoll);
+    }
   }
 
-  @SubscribeMessage('run')
-  test() {
-    throw new BadRequestException('Bad');
+  @UseGuards(GatewayAdminGuard)
+  @SubscribeMessage('remove_participant')
+  async removeParticipant(
+    @MessageBody('id') userId: string,
+    @ConnectedSocket() client: SocketWithAuth,
+  ) {
+    this.logger.debug(
+      `Attempting to remove participant ${userId} from poll ${client.pollID}`,
+    );
+
+    const updatedPoll = await this.pollService.removeParticipant(
+      client.pollID,
+      userId,
+    );
+
+    if (updatedPoll) {
+      this.io.to(client.pollID).emit('poll_updated', updatedPoll);
+    }
   }
 }

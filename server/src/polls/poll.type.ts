@@ -33,11 +33,21 @@ export type AddParticipantData = {
 };
 
 // guard types
-type AuthPayload = {
+export type AuthPayload = {
   userID: string;
   pollID: string;
   name: string;
 };
 
+export interface AddParticipantFields {
+  pollID: string;
+  userID: string;
+  name: string;
+}
+
+export interface RemoveParticipantData {
+  pollID: string;
+  userID: string;
+}
 export type RequestWithAuth = Request & AuthPayload;
 export type SocketWithAuth = Socket & AuthPayload;
