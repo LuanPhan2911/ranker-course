@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { Nomination } from 'shared';
 import { Socket } from 'socket.io';
 
 export type CreatePollFields = {
@@ -49,5 +50,16 @@ export interface RemoveParticipantData {
   pollID: string;
   userID: string;
 }
+
+export type AddNominationFields = {
+  pollID: string;
+  userID: string;
+  text: string;
+};
+export type AddNominationData = {
+  pollID: string;
+  nominationID: string;
+  nomination: Nomination;
+};
 export type RequestWithAuth = Request & AuthPayload;
 export type SocketWithAuth = Socket & AuthPayload;
