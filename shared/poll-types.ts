@@ -6,6 +6,10 @@ export type Nomination = {
   userID: string;
   text: string;
 };
+type NominationID = string;
+export type Rankings = {
+  [userID: string]: NominationID[];
+};
 
 export type Nominations = {
   [nominationID: string]: Nomination;
@@ -17,7 +21,7 @@ export interface Poll {
   participants: Participants;
   adminID: string;
   nominations: Nominations;
-  // rankings: Rankings;
+  rankings: Rankings;
   // results: Results;
   hasStarted: boolean;
 }

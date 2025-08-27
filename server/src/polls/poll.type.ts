@@ -45,6 +45,11 @@ export interface AddParticipantFields {
   userID: string;
   name: string;
 }
+export type SubmitRankingsFields = {
+  pollID: string;
+  userID: string;
+  rankings: string[];
+};
 
 export interface RemoveParticipantData {
   pollID: string;
@@ -60,6 +65,11 @@ export type AddNominationData = {
   pollID: string;
   nominationID: string;
   nomination: Nomination;
+};
+export type AddParticipantRankingsData = {
+  pollID: string;
+  userID: string;
+  rankings: string[];
 };
 export type RequestWithAuth = Request & AuthPayload;
 export type SocketWithAuth = Socket & AuthPayload;
