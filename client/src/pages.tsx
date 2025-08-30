@@ -7,10 +7,13 @@ import Join from './pages/join';
 import { AppPage, state } from './state';
 import Welcome from './pages/Welcome';
 
+import { WaitingRoom } from './pages/waiting-room';
+
 const routeConfig = {
   [AppPage.Welcome]: Welcome,
   [AppPage.Create]: Create,
   [AppPage.Join]: Join,
+  [AppPage.WaitingRoom]: WaitingRoom,
 };
 
 const Pages: React.FC = () => {
